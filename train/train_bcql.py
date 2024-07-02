@@ -16,11 +16,11 @@ from fsrl.utils import WandbLogger
 from torch.utils.data import DataLoader
 from tqdm.auto import trange  # noqa
 
-from examples.configs.bcql_configs import BCQL_DEFAULT_CONFIG, BCQLTrainConfig
 from osrl.algorithms import BCQL, BCQLTrainer
 from osrl.common import TransitionDataset
 from osrl.common.exp_util import auto_name, seed_all
 
+from configs.bcql_configs import BCQL_DEFAULT_CONFIG, BCQLTrainConfig
 
 @pyrallis.wrap()
 def train(args: BCQLTrainConfig):
@@ -49,8 +49,8 @@ def train(args: BCQLTrainConfig):
         torch.set_num_threads(args.threads)
 
     # initialize environment
-    if "Metadrive" in args.task:
-        import gym
+    # if "Metadrive" in args.task:
+    #     import gym
     env = gym.make(args.task)
 
     # pre-process offline dataset
