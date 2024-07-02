@@ -1,5 +1,4 @@
-##
-Installation
+## Installation
 ```bash
 pip install osrl-lib
 ```
