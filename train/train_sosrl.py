@@ -16,23 +16,24 @@ from fsrl.utils import WandbLogger
 from torch.utils.data import DataLoader
 from tqdm.auto import trange  # noqa
 
-from osrl.algorithms import BCQL, BCQLTrainer
+from configs.sosrl_configs import SOSRL_DEFAULT_CONFIG, SOSRLTrainConfig
 from osrl.common import TransitionDataset
 from osrl.common.exp_util import auto_name, seed_all
 
-from configs.bcql_configs import BCQL_DEFAULT_CONFIG, BCQLTrainConfig
+from algos import SOSRL, SOSRLTrainer
+
 
 @pyrallis.wrap()
-def train(args: BCQLTrainConfig):
+def train(args: SOSRLTrainConfig):
     # update config
-    cfg, old_cfg = asdict(args), asdict(BCQLTrainConfig())
+    cfg, old_cfg = asdict(args), asdict(SOSRLTrainConfig())
     differing_values = {key: cfg[key] for key in cfg.keys() if cfg[key] != old_cfg[key]}
-    cfg = asdict(BCQL_DEFAULT_CONFIG[args.task]())
+    cfg = asdict(SOSRL_DEFAULT_CONFIG[args.task]())
     cfg.update(differing_values)
     args = types.SimpleNamespace(**cfg)
 
     # setup logger
-    default_cfg = asdict(BCQL_DEFAULT_CONFIG[args.task]())
+    default_cfg = asdict(SOSRL_DEFAULT_CONFIG[args.task]())
     if args.name is None:
         args.name = auto_name(default_cfg, cfg, args.prefix, args.suffix)
     if args.group is None:
@@ -83,7 +84,7 @@ def train(args: BCQLTrainConfig):
     env = OfflineEnvWrapper(env)
 
     # model & optimizer setup
-    model = BCQL(
+    model = SOSRL(
         state_dim=env.observation_space.shape[0],
         action_dim=env.action_space.shape[0],
         max_action=env.action_space.high[0],
@@ -91,7 +92,7 @@ def train(args: BCQLTrainConfig):
         c_hidden_sizes=args.c_hidden_sizes,
         vae_hidden_sizes=args.vae_hidden_sizes,
         sample_action_num=args.sample_action_num,
-        PID=args.PID,
+        multiplier=args.multiplier,
         gamma=args.gamma,
         tau=args.tau,
         lmbda=args.lmbda,
@@ -111,7 +112,7 @@ def train(args: BCQLTrainConfig):
     logger.setup_checkpoint_fn(checkpoint_fn)
 
     # trainer
-    trainer = BCQLTrainer(model,
+    trainer = SOSRLTrainer(model,
                           env,
                           logger=logger,
                           actor_lr=args.actor_lr,
